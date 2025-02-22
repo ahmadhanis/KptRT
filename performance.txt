@@ -19,6 +19,7 @@ Total Process Time: 10.62 seconds
 
 Total Data Migrated: 50000 records
 
+
 3. NodeJS
 Migration Summary
 Start Time: 21/02/2025, 5:13:04 pm
@@ -26,5 +27,15 @@ Start Time: 21/02/2025, 5:13:04 pm
 End Time: 21/02/2025, 5:13:37 pm
 
 Total Process Time: 32.84 seconds
+
+Total Data Migrated: 50000 records
+
+4. Go Lang
+Migration Summary
+Start Time: 2025-02-22 17:20:38
+
+End Time: 2025-02-22 17:21:15
+
+Total Process Time: 37.7485793 seconds
 
 Total Data Migrated: 50000 records

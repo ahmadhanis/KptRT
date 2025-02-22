@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Migration</title>
+    <style>
+        /* Same styles as your original HTML */
+    </style>
+</head>
+<body>
+    <h2>Data Migration from MSSQL to MySQL</h2>
+    <button onclick="startMigration()">Start Migration</button>
+
+    <div id="loading">
+        <div class="spinner"></div>
+        <p>Processing Migration... Please wait.</p>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        function startMigration() {
+            document.getElementById('loading').style.display = 'block';
+            fetch('/api/migrate', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('result').innerHTML = `
+                        <h3>Migration Summary</h3>
+                        <p>Start Time: ${new Date(data.start_time).toLocaleString()}</p>
+                        <p>End Time: ${new Date(data.end_time).toLocaleString()}</p>
+                        <p>Total Process Time: ${data.elapsed_time} seconds</p>
+                        <p>Total Data Migrated: ${data.total_migrated} records</p>
+                    `;
+                });
+        }
+    </script>
+</body>
+</html>
