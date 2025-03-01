@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, send_from_directory,render_template,request
 from flask_cors import CORS
 import pyodbc
 import mysql.connector
@@ -38,6 +38,50 @@ def connect_mysql():
 def serve_index():
     return send_from_directory("static", "index.html")
 
+# Show Data from MySQL Table with Pagination and Search by Matric Number
+@app.route("/show_data", methods=["GET"])
+def show_data():
+    try:
+        page = int(request.args.get("page", 1))  # Default to page 1 if not specified
+        per_page = 500  # Number of records per page
+        offset = (page - 1) * per_page
+        search_query = request.args.get("search", "")
+        
+        mysql_conn = connect_mysql()
+        mysql_cursor = mysql_conn.cursor(dictionary=True)
+        
+        # Search logic (only by matric number)
+        if search_query:
+            query = "SELECT * FROM D1_Student_Realtime WHERE matrik_no LIKE %s LIMIT %s OFFSET %s"
+            params = (f"%{search_query}%", per_page, offset)
+        else:
+            query = "SELECT * FROM D1_Student_Realtime LIMIT %s OFFSET %s"
+            params = (per_page, offset)
+        
+        mysql_cursor.execute(query, params)
+        records = mysql_cursor.fetchall()
+        
+        # Add row numbers
+        start_number = offset + 1
+        for index, record in enumerate(records):
+            record["row_number"] = start_number + index
+
+        # Get total count of records for pagination
+        if search_query:
+            mysql_cursor.execute("SELECT COUNT(*) as total FROM D1_Student_Realtime WHERE matrik_no LIKE %s", (f"%{search_query}%",))
+        else:
+            mysql_cursor.execute("SELECT COUNT(*) as total FROM D1_Student_Realtime")
+        total_records = mysql_cursor.fetchone()["total"]
+        total_pages = (total_records + per_page - 1) // per_page
+
+        mysql_cursor.close()
+        mysql_conn.close()
+
+        return render_template("show.html", records=records, page=page, total_pages=total_pages, search_query=search_query)
+    except Exception as e:
+        print("Error:", str(e))
+        return jsonify({"error": str(e)}), 500
+    
 # Migration Route
 @app.route("/migrate", methods=["GET"])
 def migrate_data():
@@ -58,14 +102,16 @@ def migrate_data():
         mysql_conn = connect_mysql()
         mysql_cursor = mysql_conn.cursor()
 
-        # Insert into MySQL
-        insert_query = f"""
+         # Insert or Update MySQL
+        insert_update_query = f"""
             INSERT INTO D1_Student_Realtime ({', '.join(columns)}) 
             VALUES ({', '.join(['%s'] * len(columns))})
+            ON DUPLICATE KEY UPDATE 
+            {', '.join([f'{col} = VALUES({col})' for col in columns])}
         """
 
         for record in records:
-            mysql_cursor.execute(insert_query, tuple(record))  # Convert Row to Tuple
+            mysql_cursor.execute(insert_update_query, tuple(record))  # Convert Row to Tuple
             total_migrated += 1
 
         mysql_conn.commit()

@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  flask_app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      MSSQL_SERVER: "113.23.136.34"
+      MSSQL_DATABASE: "TESTINGDB"
+      MSSQL_USERNAME: "user_viewtestingdb"
+      MSSQL_PASSWORD: "user_viewtestingdb#131024$^~"
+      MYSQL_HOST: "localhost"
+      MYSQL_USER: "root"
+      MYSQL_PASSWORD: ""
+      MYSQL_DATABASE: "kptrtdb"
+    depends_on:
+      - mysql
+      - mssql
+
+  mysql:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_DATABASE: "kptrtdb"
+    ports:
+      - "3306:3306"
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    restart: always
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "yourStrong!Passw0rd"
+    ports:
+      - "1433:1433"
